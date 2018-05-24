@@ -6,3 +6,6 @@ boot.bin: boot.asm
 
 run: boot.bin
 	$(QEMU) boot.bin
+
+clean:
+	rm *.o
