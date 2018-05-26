@@ -35,3 +35,8 @@ summary:
     iff the last bits are all set to 1
 
 What a pain ! : we need to define this data structure
+
+
+### Multipliter demultiplixer 
+
+Bascially a switch

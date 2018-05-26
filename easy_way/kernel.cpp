@@ -1,5 +1,6 @@
 #include "types.h"
 #include "gdt.h"
+#include "port.h"
 void printf(char* str)
 {
     static uint16_t* VideoMemory = (uint16_t*) 0xb8000;

@@ -2,5 +2,10 @@
     "files.exclude": {
         "*.bin": true,
         "*.o": true
-    }
+    },
+    "files.autoSave": "files.autoSaveDelay",
+    "gitlens.advanced.messages": {
+        "suppressShowKeyBindingsNotice": true
+    },
+    "gitlens.historyExplorer.enabled": true
 }
