@@ -40,3 +40,16 @@ What a pain ! : we need to define this data structure
 ### Multipliter demultiplixer 
 
 Bascially a switch
+
+
+## IDT
+
+### Each entry
+    interrupt number
+    handler(Ram where to jump to) 
+    flags
+    segments(related to handler?)
+    access right(kernel space\user sapce)
+
+*wtf*
+    each function for each interrupt

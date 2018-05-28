@@ -1,3 +1,5 @@
+# Bascially this is a graph (like the computing graoph in tensorflow)
+
 .set MAGIC, 0x1badb002
 .set FLAGS, (1<<0 | 1<<1)
 .set CHECKSUM, -(MAGIC + FLAGS)

@@ -5,6 +5,7 @@ Port::Port(uint16_t portnumber)
     this->portnumber = portnumber;
 }
 
+
 Port::~Port() {}
 
 Port_8Bit::Port_8Bit(uint16_t portnumber)
@@ -30,6 +31,7 @@ uint8_t Port_8Bit::Read()
 Port_8Bit_Slow::Port_8Bit_Slow(uint16_t portnumber)
     : Port_8Bit(portnumber) {}
 
+Port_8Bit_Slow::~Port_8Bit_Slow(){}
 void Port_8Bit_Slow::Write(uint8_t data)
 {
     asm volatile("outb %0, %1\njmp 1f\n1: jmp 1f\n1:"
