@@ -7,6 +7,25 @@
         
 */
 
+InterruptHandler::InterruptHandler(uint8_t interruptNumber, InterruptManager *interruptManager)
+{
+    this->interruptNumber = interruptNumber;
+    this->interruptManager = interruptManager;
+    interruptManager->handlers[interruptNumber] = this;
+}
+InterruptHandler::~InterruptHandler()
+{
+    if (interruptManager->handlers[interruptNumber] == this)
+    {
+        interruptManager->handlers[interruptNumber] = 0;
+    }
+}
+
+uint32_t InterruptHandler::HandleInterrupt(uint32_t esp)
+{
+    return esp;
+}
+
 InterruptManager::GateDescriptor InterruptManager::interruptDescriptorTable[256];
 
 InterruptManager *InterruptManager::ActiveInterruptManager = 0;
@@ -40,7 +59,7 @@ InterruptManager::InterruptManager(GlobalDescriptorTable *gdt)
     // in this function
     // we define the IDT
     // bascially we write on a special section of memory
-    // to tell the cpu 
+    // to tell the cpu
     // what will it do when recevie a special interrupt with
     // a special interrupt number
     uint16_t CodeSegment = gdt->CodeSegmentSelector();
@@ -48,22 +67,22 @@ InterruptManager::InterruptManager(GlobalDescriptorTable *gdt)
 
     for (uint16_t i = 0; i < 256; i++)
     {
+        handlers[i] = 0;
         SetInterruptDescriptorTableEntry(i, CodeSegment, &IgnoreInterruptRequest, 0, IDT_INTERRUPT_GATE);
     }
     // see
     // we set a magic number 0x20
-    // and a handler function HandleInterruptRequest0x00 to handle this interrupt 
-    // that is 
+    // and a handler function HandleInterruptRequest0x00 to handle this interrupt
+    // that is
     // call HandleInterruptRequest0x00 when interrupt number is 0x20
     // CodeSegment, 0, IDT_INTERRUPT_GATE are special parameters to
     // locate where the IDT table is
     SetInterruptDescriptorTableEntry(0x20, CodeSegment, &HandleInterruptRequest0x00, 0, IDT_INTERRUPT_GATE);
     SetInterruptDescriptorTableEntry(0x21, CodeSegment, &HandleInterruptRequest0x01, 0, IDT_INTERRUPT_GATE);
 
-
-// wtf starts
-// I think this is something about hardware setting
-// need to know the tf
+    // wtf starts
+    // I think this is something about hardware setting
+    // need to know the tf
     picMasterCommand.Write(0x11);
     picSlaveCommand.Write(0x11);
 
@@ -78,7 +97,7 @@ InterruptManager::InterruptManager(GlobalDescriptorTable *gdt)
 
     picMasterData.Write(0x00);
     picSlaveData.Write(0x00);
-// wtf ends
+    // wtf ends
     InterruptDescriptorTablePointer idt;
     idt.size = 256 * sizeof(GateDescriptor) - 1;
     idt.base = (uint32_t)interruptDescriptorTable;
@@ -117,7 +136,7 @@ uint32_t InterruptManager::HandleInterrupt(uint8_t interruptNumber, uint32_t esp
 {
     if (ActiveInterruptManager != 0)
     {
-        ActiveInterruptManager->DoHandleInterrupt(interruptNumber, esp);
+        return ActiveInterruptManager->DoHandleInterrupt(interruptNumber, esp);
     }
     printf("Interrupt");
     return esp;
@@ -125,6 +144,29 @@ uint32_t InterruptManager::HandleInterrupt(uint8_t interruptNumber, uint32_t esp
 
 uint32_t InterruptManager::DoHandleInterrupt(uint8_t interruptNumber, uint32_t esp)
 {
-    printf("Interrupt");
+    if (handlers[interruptNumber] != 0)
+    {
+        esp = handlers[interruptNumber]->HandleInterrupt(esp);
+    }
+    else if (interruptNumber != 0x20) // if the interrupt is not the timer interrupt!
+    {
+        char *foo = "UNHANDLED Interrupt";
+        char *hex = "0123456789ABCDEF";
+        foo[22] = hex[(interruptNumber >> 4) & 0x0F];
+        foo[23] = hex[interruptNumber & 0x0F];
+
+        printf(foo);
+    }
+    // we tell the pic that it can continue listening (not blocking)
+
+    if (0x20 <= interruptNumber && interruptNumber < 0x30)
+    {
+        picMasterCommand.Write(0x20); // answer to the master pic
+        if (0x28 <= interruptNumber)  // if request is from the slave
+        {
+            picSlaveCommand.Write(0x20);
+        }
+    }
+
     return esp;
 }
