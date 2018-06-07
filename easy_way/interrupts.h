@@ -15,7 +15,7 @@ class InterruptHandler
     ~InterruptHandler();
 
   public:
-   virtual uint32_t HandleInterrupt(uint32_t esp);
+    virtual uint32_t HandleInterrupt(uint32_t esp);
 };
 class InterruptManager
 {
@@ -69,6 +69,7 @@ class InterruptManager
     // this is holt shit
     static void HandleInterruptRequest0x00();
     static void HandleInterruptRequest0x01();
+    static void HandleInterruptRequest0x0C();
 };
 
 #endif

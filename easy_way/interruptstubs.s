@@ -27,7 +27,8 @@ _ZN16InterruptManager26HandleInterruptRequest\num\()Ev:
 .endm
 
 HandleInterruptRequest 0x00
-HandleInterruptRequest 0x01
+HandleInterruptRequest 0x01 # for the keyboard
+HandleInterruptRequest 0x0C # for the mouse
 
 int_bottom:
 

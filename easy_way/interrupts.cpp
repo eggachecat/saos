@@ -79,6 +79,7 @@ InterruptManager::InterruptManager(GlobalDescriptorTable *gdt)
     // locate where the IDT table is
     SetInterruptDescriptorTableEntry(0x20, CodeSegment, &HandleInterruptRequest0x00, 0, IDT_INTERRUPT_GATE);
     SetInterruptDescriptorTableEntry(0x21, CodeSegment, &HandleInterruptRequest0x01, 0, IDT_INTERRUPT_GATE);
+    SetInterruptDescriptorTableEntry(0x2C, CodeSegment, &HandleInterruptRequest0x0C, 0, IDT_INTERRUPT_GATE);
 
     // wtf starts
     // I think this is something about hardware setting
