@@ -51,7 +51,8 @@ class InterruptManager
     uint32_t DoHandleInterrupt(uint8_t interruptNumber, uint32_t esp);
 
     static void IgnoreInterruptRequest();
-    // implemented in interrupts.s
+    // implemented in interruptstub.s
+    // this is holt shit
     static void HandleInterruptRequest0x00();
     static void HandleInterruptRequest0x01();
 };
