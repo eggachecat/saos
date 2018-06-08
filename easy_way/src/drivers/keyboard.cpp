@@ -1,5 +1,7 @@
-#include "keyboard.h"
-
+#include <drivers/keyboard.h>
+using namespace saos::common;
+using namespace saos::drivers;
+using namespace saos::hardwares;
 void printf(char *);
 void printfHex(uint8_t);
 KeyboardEventHandler::KeyboardEventHandler()

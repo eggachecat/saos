@@ -1,11 +1,11 @@
 .set IRQ_BASE, 0x20
 .section .text
 
-.extern _ZN16InterruptManager15HandleInterruptEhj
+.extern _ZN4saos9hardwares16InterruptManager15HandleInterruptEhj
 
 .macro HandleException num
-.global _ZN16InterruptManager19HandleException\num\()Ev
-_ZN16InterruptManager19HandleException\num\()Ev:
+.global _ZN164saos9hardwaresInterruptManager19HandleException\num\()Ev
+_ZN4saos9hardwares16InterruptManager19HandleException\num\()Ev:
     movb $\num, (interruptnumber)
     jmp int_bottom
 .endm
@@ -20,8 +20,8 @@ _ZN16InterruptManager19HandleException\num\()Ev:
 #   which is also defined in interrupts.h and implemented in interrupts.cpp
 
 .macro HandleInterruptRequest num
-.global _ZN16InterruptManager26HandleInterruptRequest\num\()Ev
-_ZN16InterruptManager26HandleInterruptRequest\num\()Ev:
+.global _ZN4saos9hardwares16InterruptManager26HandleInterruptRequest\num\()Ev
+_ZN4saos9hardwares16InterruptManager26HandleInterruptRequest\num\()Ev:
     movb $\num + IRQ_BASE, (interruptnumber)
     jmp int_bottom
 .endm
@@ -44,7 +44,7 @@ int_bottom:
 
     push %esp
     push (interruptnumber)
-    call _ZN16InterruptManager15HandleInterruptEhj
+    call _ZN4saos9hardwares16InterruptManager15HandleInterruptEhj
     # addl $5, %esp
     movl %eax, %esp
 

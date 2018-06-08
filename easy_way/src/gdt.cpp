@@ -1,4 +1,6 @@
-#include "gdt.h"
+#include <gdt.h>
+using namespace saos;
+using namespace saos::common;
 
 GlobalDescriptorTable::GlobalDescriptorTable()
     : nullSegmentSelector(0, 0, 0),

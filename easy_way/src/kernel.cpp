@@ -1,10 +1,16 @@
-#include "types.h"
-#include "gdt.h"
-#include "port.h"
-#include "interrupts.h"
-#include "keyboard.h"
-#include "mouse.h"
-#include "driver.h"
+#include <common/types.h>
+#include <gdt.h>
+#include <hardwares/port.h>
+#include <hardwares/interrupts.h>
+#include <drivers/keyboard.h>
+#include <drivers/mouse.h>
+#include <drivers/driver.h>
+
+using namespace saos;
+using namespace saos::common;
+using namespace saos::drivers;
+using namespace saos::hardwares;
+
 void printf(char *str)
 {
     static uint16_t *VideoMemory = (uint16_t *)0xb8000;
@@ -66,7 +72,7 @@ class PrintKeyboardEventHandler : public KeyboardEventHandler
 class MouseToConsole : public MouseEventHandler
 {
 
-public:
+  public:
     MouseToConsole() : x(40), y(12)
     {
 

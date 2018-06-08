@@ -1,5 +1,7 @@
-#include "mouse.h"
-
+#include <drivers/mouse.h>
+using namespace saos::common;
+using namespace saos::drivers;
+using namespace saos::hardwares;
 MouseEventHandler::MouseEventHandler()
 {
 }

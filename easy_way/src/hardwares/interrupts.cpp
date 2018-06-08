@@ -1,5 +1,6 @@
-#include "interrupts.h"
-
+#include <hardwares/interrupts.h>
+using namespace saos::common;
+using namespace saos::hardwares;
 /*
     esp: 
         current stack pointer
