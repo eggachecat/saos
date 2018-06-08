@@ -1,9 +1,25 @@
 #include "keyboard.h"
 
-KeyboardDriver::KeyboardDriver(InterruptManager *manager)
+void printf(char *);
+void printfHex(uint8_t);
+KeyboardEventHandler::KeyboardEventHandler()
+{
+}
+void KeyboardEventHandler::OnKeyUp(char)
+{
+}
+void KeyboardEventHandler::OnKeyDown(char)
+{
+}
+KeyboardDriver::KeyboardDriver(InterruptManager *manager, KeyboardEventHandler *handler)
     : InterruptHandler(0x21, manager),
       dataport(0x60),
       commandport(0x64)
+{
+    this->handler = handler;
+}
+
+void KeyboardDriver::Activate()
 {
     while (commandport.Read() & 0x1)
     {
@@ -20,10 +36,15 @@ KeyboardDriver::KeyboardDriver(InterruptManager *manager)
 KeyboardDriver::~KeyboardDriver()
 {
 }
-void printf(char *);
+
 uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 {
     uint8_t key = dataport.Read();
+
+    if (handler == 0)
+    {
+        return esp;
+    }
 
     if (key < 0x80) // only release ignore keep pressing
     {
@@ -37,13 +58,11 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 
         case 0x1E:
             printf("a");
+            this->handler->OnKeyDown('a');
             break;
         default:
             char *foo = "KEYBOARD 0x00 ";
-            char *hex = "0123456789ABCDEF";
-            foo[11] = hex[(key >> 4) & 0x0F];
-            foo[12] = hex[key & 0x0F];
-            printf(foo);
+            printfHex(key);
             break;
         }
     }
