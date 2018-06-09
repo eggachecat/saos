@@ -5,6 +5,7 @@
 #include <drivers/keyboard.h>
 #include <drivers/mouse.h>
 #include <drivers/driver.h>
+#include <hardwares/pci.h>
 
 using namespace saos;
 using namespace saos::common;
@@ -131,7 +132,7 @@ extern "C" void callConstructors()
 
 extern "C" void kernelMain(void *multiboot_structure, uint32_t magicnumber)
 {
-    printf("Hello world! \n--- sunao");
+    printf("Fuck what the fuck Hello world! \n--- sunao");
 
     GlobalDescriptorTable gdt;
     InterruptManager interrupts(&gdt);
@@ -147,6 +148,9 @@ extern "C" void kernelMain(void *multiboot_structure, uint32_t magicnumber)
     MouseToConsole mousehandler;
     MouseDriver mouse(&interrupts, &mousehandler);
     drvManager.AddDriver(&mouse);
+
+    PeripheralComponentInterconnectController PCIController;
+    PCIController.SelectDrivers(&drvManager);
 
     printf("I hate you forever ! \n--- chenhao - 1");
 

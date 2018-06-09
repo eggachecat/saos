@@ -9,6 +9,8 @@
     },
     "gitlens.historyExplorer.enabled": true,
     "files.associations": {
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "system_error": "cpp",
+        "type_traits": "cpp"
     }
 }
