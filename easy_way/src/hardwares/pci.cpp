@@ -1,6 +1,8 @@
 #include <hardwares/pci.h>
 using namespace saos::common;
 using namespace saos::hardwares;
+using namespace saos::drivers;
+
 void printf(char *str);
 void printfHex(uint8_t);
 PeripheralComponentInterconnectDeviceDescriptor::PeripheralComponentInterconnectDeviceDescriptor() {}
@@ -40,7 +42,81 @@ bool PeripheralComponentInterconnectController::DeviceHasFunction(saos::common::
 {
     return Read(bus, device, 0, 0x0E) & (1 << 7); // only the 7th bit tell it has function or not
 }
-void PeripheralComponentInterconnectController::SelectDrivers(saos::drivers::DriverManager *driverManager)
+BaseAddressRegister PeripheralComponentInterconnectController::GetBaseAddressRegister(uint16_t bus, uint16_t device, uint16_t function, uint16_t bar)
+{
+    BaseAddressRegister result;
+
+    uint32_t header_type = Read(bus, device, function, 0x0E) & 0x7F;
+    int maxBARs = 6 - (4 * header_type);
+    if (bar >= maxBARs)
+    {
+        return result;
+    }
+
+    // base of registers are size of 4
+    // lspci -x
+    uint32_t bar_value = Read(bus, device, function, 0x10 + 4 * bar);
+    result.type = (bar_value & 0x01) ? InputOutput : MemoryMapping; // last bit counts
+
+    uint32_t tmp;
+
+    // write all ones
+    // while not all bits are writeable
+    // the device will give make unwriteable bits 0
+    // read it back and we will know which bits are unwriteable
+    // information for mapping range
+
+    if (result.type == MemoryMapping)
+    {
+        switch ((bar_value >> 1) & 0x03)
+        {
+        case 0: //32 Bit Mode
+        case 1: //20 Bit Mode
+        case 2: //64 bit Mode
+            break;
+        }
+        result.prefetchable = ((bar_value >> 3) & 0x01 == 1);
+    }
+    else // InputOutput
+    {
+        result.address = (uint8_t *)(bar_value & ~0x3); // remove last values
+        result.prefetchable = false;
+    }
+
+    return result;
+}
+Driver *PeripheralComponentInterconnectController::GetDriver(PeripheralComponentInterconnectDeviceDescriptor dev, saos::hardwares::InterruptManager *interrupts)
+{
+    switch (dev.vendor_id)
+    {
+    case 0x1022: // AMD
+        switch (dev.device_id)
+        {
+        case 0x2000: // am
+            printf("driver 0x2000\n");
+            break;
+        }
+        break;
+    case 0x8086:
+        printf("driver 0x8086\n");
+
+        break;
+    }
+    switch (dev.class_id)
+    {
+    case 0x03: // graphics
+        switch (dev.subclass_id)
+        {
+        case 0x00: // VGA
+            printf("driver 0x00\n");
+
+            break;
+        }
+        break;
+    }
+    return 0;
+}
+void PeripheralComponentInterconnectController::SelectDrivers(saos::drivers::DriverManager *driverManager, InterruptManager *interrupts)
 {
     for (int bus = 0; bus < 9; bus++)
     {
@@ -52,8 +128,27 @@ void PeripheralComponentInterconnectController::SelectDrivers(saos::drivers::Dri
                 PeripheralComponentInterconnectDeviceDescriptor dev = GetDeviceDescriptor(bus, device, function);
                 if (dev.vendor_id == 0x0000 || dev.vendor_id == 0xFFFF)
                 {
-                    break;
+                    // functions can be gaped
+                    // that is
+                    // function-0, function 5 (without 1,2,3,4)
+                    continue;
                 }
+
+                // we actually add driver to it!
+                for (int barNum = 0; barNum < 6; barNum++)
+                {
+                    BaseAddressRegister bar = GetBaseAddressRegister(bus, device, function, barNum);
+                    if (bar.address && (bar.type == InputOutput))
+                    {
+                        dev.portBase = (uint32_t)bar.address;
+                    }
+                    Driver *driver = GetDriver(dev, interrupts);
+                    if (driver != 0)
+                    {
+                        driverManager->AddDriver(driver);
+                    }
+                }
+
                 printf("PCI BUS: ");
                 printfHex(bus & 0xFF);
 
@@ -63,7 +158,7 @@ void PeripheralComponentInterconnectController::SelectDrivers(saos::drivers::Dri
                 printf(", Function: ");
                 printfHex(function & 0xFF);
 
-                printf(" = VENDOR: " );
+                printf(" = VENDOR: ");
                 printfHex((dev.vendor_id & 0xFF00) >> 8);
                 printfHex(dev.vendor_id & 0xFF);
 

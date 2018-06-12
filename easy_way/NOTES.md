@@ -53,3 +53,24 @@ Bascially a switch
 
 *wtf*
     each function for each interrupt
+
+
+
+## PCI
+
+
+
+## Base Address registers
+
+### Purpose
+
+    set base address registers to communicate with different ports
+
+    [] [] [] [ |type]
+
+    type: 1 bit:
+        1: 
+            send byte individually
+
+    port number:
+        numer of 4

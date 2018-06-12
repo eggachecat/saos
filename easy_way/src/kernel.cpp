@@ -6,7 +6,7 @@
 #include <drivers/mouse.h>
 #include <drivers/driver.h>
 #include <hardwares/pci.h>
-
+#include <drivers/vga.h>
 using namespace saos;
 using namespace saos::common;
 using namespace saos::drivers;
@@ -150,13 +150,23 @@ extern "C" void kernelMain(void *multiboot_structure, uint32_t magicnumber)
     drvManager.AddDriver(&mouse);
 
     PeripheralComponentInterconnectController PCIController;
-    PCIController.SelectDrivers(&drvManager);
+    PCIController.SelectDrivers(&drvManager, &interrupts);
 
+    VideoGraphicsArray vga;
     printf("I hate you forever ! \n--- chenhao - 1");
 
     drvManager.ActivateAll();
     printf("I hate you forever ! \n--- chenhao - 2");
     interrupts.Activate();
+    vga.SetMode(320, 200, 8);
+
+    for (int32_t y = 0; y < 200; y++)
+    {
+        for (int32_t x = 0; x < 320; x++)
+        {
+            vga.PutPixel(x, y, 0x00, 0x00, 0xA8);
+        }
+    }
 
     while (1)
         ;
