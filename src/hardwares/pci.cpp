@@ -3,7 +3,7 @@ using namespace saos::common;
 using namespace saos::hardwares;
 using namespace saos::drivers;
 
-void printf(char *str);
+void printf(const char *str);
 void printfHex(uint8_t);
 PeripheralComponentInterconnectDeviceDescriptor::PeripheralComponentInterconnectDeviceDescriptor() {}
 PeripheralComponentInterconnectDeviceDescriptor::~PeripheralComponentInterconnectDeviceDescriptor() {}

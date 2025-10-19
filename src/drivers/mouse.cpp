@@ -2,6 +2,11 @@
 using namespace saos::common;
 using namespace saos::drivers;
 using namespace saos::hardwares;
+
+// 声明外部函数
+void printf(const char *);
+void printfHex(uint8_t);
+
 MouseEventHandler::MouseEventHandler()
 {
 }
@@ -22,42 +27,73 @@ MouseDriver::~MouseDriver()
 }
 void MouseDriver::Activate()
 {
+    printf("Mouse driver activating...\n");
     offset = 0;
     buttons = 0;
     uint16_t *VideoMemory = (uint16_t *)0xb8000;
     VideoMemory[80 * 12 + 40] = ((VideoMemory[80 * 12 + 40] & 0xF000) >> 4) | ((VideoMemory[80 * 12 + 40] & 0x0F00) << 4) | ((VideoMemory[80 * 12 + 40] & 0x00FF) >> 4);
 
+    printf("Activating mouse interrupts...\n");
     commandport.Write(0xA8); // activate interrupts
     commandport.Write(0x20); // give us your current state
     uint8_t status = dataport.Read() | 2;
+    printf("Mouse status: 0x");
+    printfHex(status);
+    printf("\n");
     commandport.Write(0x60); // set state
     dataport.Write(status);  // write back
 
+    printf("Enabling mouse device...\n");
     commandport.Write(0xD4);
-    dataport.Write(0xF4); // really activate the keyboard
-    dataport.Read();
+    dataport.Write(0xF4); // really activate the mouse
+    uint8_t response = dataport.Read();
+    printf("Mouse response: 0x");
+    printfHex(response);
+    printf("\n");
+    printf("Mouse driver activated!\n");
 }
-void printf(char *);
 uint32_t MouseDriver::HandleInterrupt(uint32_t esp)
 {
     uint8_t status = commandport.Read();
+    printf("Mouse interrupt! Status: 0x");
+    printfHex(status);
+    printf("\n");
+    
     // if the sixth bit of the status is one
     // there is actual data to read
     if (!(status & 0x20))
     {
+        printf("No mouse data available\n");
         return esp;
     }
 
     buffer[offset] = dataport.Read();
+    printf("Mouse data[");
+    if (offset == 0) printf("0");
+    else if (offset == 1) printf("1"); 
+    else printf("2");
+    printf("]: 0x");
+    printfHex(buffer[offset]);
+    printf("\n");
+    
     offset = (offset + 1) % 3;
 
     if (handler == 0)
     {
+        printf("No mouse handler!\n");
         return esp;
     }
 
     if (offset == 0)
     {
+        printf("Processing mouse packet: [0x");
+        printfHex(buffer[0]);
+        printf(", 0x");
+        printfHex(buffer[1]);
+        printf(", 0x");
+        printfHex(buffer[2]);
+        printf("]\n");
+        
         // buffer[1]: move at x-axis
         // buffer[2]: move at y-axis
 
