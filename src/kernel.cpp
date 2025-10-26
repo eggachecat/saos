@@ -288,17 +288,18 @@ extern "C" void kernelMain(void *multiboot_structure, uint32_t magicnumber)
     printf("Please try pressing keys or moving mouse now!\n");
     serial_printf("Please try pressing keys or moving mouse now!\n");
     
+    // 注释掉图形模式，保持文本模式以便查看输出
     // 切换到VGA图形模式：320x200像素，8位色彩
-    vga.SetMode(320, 200, 8);
+    // vga.SetMode(320, 200, 8);
 
-    // 绘制蓝色背景
-    for (int32_t y = 0; y < 200; y++)
-    {
-        for (int32_t x = 0; x < 320; x++)
-        {
-            vga.PutPixel(x, y, 0x00, 0x00, 0xA8);  // RGB: (0, 0, 168) 蓝色
-        }
-    }
+    // // 绘制蓝色背景
+    // for (int32_t y = 0; y < 200; y++)
+    // {
+    //     for (int32_t x = 0; x < 320; x++)
+    //     {
+    //         vga.PutPixel(x, y, 0x00, 0x00, 0xA8);  // RGB: (0, 0, 168) 蓝色
+    //     }
+    // }
 
     // 主循环 - 系统保持运行状态
     while (1)
