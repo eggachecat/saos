@@ -211,21 +211,84 @@ public:
     }
 };
 
-/*
- * C++全局构造函数调用机制
- * 在C++中，全局对象的构造函数需要在main函数之前调用
- * 链接器会将所有构造函数指针放在特殊段中(.init_array)
- * start_ctors和end_ctors标记了这个数组的开始和结束
+/* ============================================================================
+ * C++全局构造函数调用机制 - 详细解释
+ * ============================================================================
+ * 问题：start_ctors 和 end_ctors 在哪里定义的？
+ * 答案：在链接器脚本 linker.ld 中定义的！
+ * 
+ * 链接器脚本中的定义：
+ *   start_ctors = .;                    // 标记开始位置
+ *   KEEP(*( .init_array ));             // 收集所有构造函数指针
+ *   KEEP(*(SORT_BY_INIT_PRIORITY(...)));// 收集优先级构造函数
+ *   end_ctors = .;                      // 标记结束位置
+ * 
+ * 工作原理：
+ * 
+ * 1. 编译阶段：
+ *    假设你的代码中有：
+ *      class MyClass { MyClass() { ... } };
+ *      MyClass globalObj;  // 全局对象
+ *    
+ *    编译器生成：
+ *      - 一个初始化函数（类似 __cxx_global_var_init_0）
+ *      - 将这个函数指针放入 .init_array 段
+ * 
+ * 2. 链接阶段：
+ *    链接器执行 linker.ld 脚本：
+ *      - 创建 start_ctors 符号，值为当前地址（比如 0x0012AB00）
+ *      - 收集所有 .o 文件中的 .init_array 段，连续排列
+ *      - 创建 end_ctors 符号，值为结束地址（比如 0x0012AB0C）
+ *    
+ *    结果内存布局：
+ *      地址 0x0012AB00:  [函数指针1] start_ctors 指向这里
+ *      地址 0x0012AB04:  [函数指针2]
+ *      地址 0x0012AB08:  [函数指针3]
+ *      地址 0x0012AB0C:  (下一个段开始) end_ctors 指向这里
+ * 
+ * 3. 运行阶段（在 loader.s 中）：
+ *    loader.s 调用 callConstructors()
+ *    callConstructors() 遍历 start_ctors 到 end_ctors 之间的所有函数指针
+ *    并调用每一个，从而初始化所有全局对象
+ * 
+ * 关键概念：
+ *   - start_ctors 和 end_ctors 不是C++变量，而是链接器符号
+ *   - extern "C" 声明让C++代码能访问链接器定义的符号
+ *   - &start_ctors 获取的是数组的起始地址
+ *   - &end_ctors 获取的是数组的结束地址
  */
+
+// constructor 是一个函数指针类型：void (*)()
+// 即：指向"不接受参数、不返回值"的函数的指针
 typedef void (*constructor)();
-extern "C" constructor start_ctors;  // 构造函数数组开始标记
-extern "C" constructor end_ctors;    // 构造函数数组结束标记
+
+// extern "C" 声明：这些符号由链接器提供，不是C++定义的
+// 注意：这里的 constructor 类型只是为了方便，实际上它们是地址标记
+extern "C" constructor start_ctors;  // 链接器在 linker.ld 中定义的符号
+extern "C" constructor end_ctors;    // 链接器在 linker.ld 中定义的符号
 
 extern "C" void callConstructors()
 {
-    // 遍历并调用所有全局对象的构造函数
+    // 遍历构造函数指针数组
+    // 
+    // &start_ctors: 获取 start_ctors 符号的地址，即数组首元素的地址
+    // &end_ctors:   获取 end_ctors 符号的地址，即数组最后一个元素之后的地址
+    // 
+    // 例如，如果有3个全局对象：
+    //   i = &start_ctors  → 指向第1个函数指针
+    //   i++               → 指向第2个函数指针
+    //   i++               → 指向第3个函数指针
+    //   i++ 后 i == &end_ctors → 循环结束
+    // 
+    // (*i)(): 解引用函数指针并调用
+    //   *i  → 获取函数指针的值
+    //   (*i)() → 调用这个函数
     for (constructor *i = &start_ctors; i != &end_ctors; i++)
-        (*i)();
+    {
+        (*i)();  // 调用当前构造函数
+    }
+    
+    // 现在所有全局对象都已经构造完成，可以安全使用了！
 }
 
 extern "C" void kernelMain(void *multiboot_structure, uint32_t magicnumber)
